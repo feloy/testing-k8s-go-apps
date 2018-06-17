@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	authorizationv1 "k8s.io/api/authorization/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -47,6 +48,22 @@ func (o *k8s) isVersion(major string, minor string) (bool, error) {
 		return false, errors.New("Minor version does not match")
 	}
 	return true, nil
+}
+
+func (o *k8s) canICreateDeployments() (bool, error) {
+	ssar := &authorizationv1.SelfSubjectAccessReview{
+		Spec: authorizationv1.SelfSubjectAccessReviewSpec{
+			ResourceAttributes: &authorizationv1.ResourceAttributes{
+				Verb:     "create",
+				Resource: "deployments",
+			},
+		},
+	}
+	ssar, err := o.clientset.AuthorizationV1().SelfSubjectAccessReviews().Create(ssar)
+	if err != nil {
+		return false, err
+	}
+	return ssar.Status.Allowed, nil
 }
 
 func main() {
