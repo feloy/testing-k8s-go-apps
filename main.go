@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -34,6 +35,20 @@ func (o *k8s) getVersion() (string, error) {
 	return fmt.Sprintf("%s", version), nil
 }
 
+func (o *k8s) isVersion(major string, minor string) (bool, error) {
+	version, err := o.clientset.Discovery().ServerVersion()
+	if err != nil {
+		return false, err
+	}
+	if version.Major != major {
+		return false, errors.New("Major version does not match")
+	}
+	if version.Minor != minor {
+		return false, errors.New("Minor version does not match")
+	}
+	return true, nil
+}
+
 func main() {
 	k8s, err := newK8s()
 	if err != nil {
@@ -46,4 +61,10 @@ func main() {
 		return
 	}
 	fmt.Println(v)
+	isV, err := k8s.isVersion("1", "9")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(isV)
 }
