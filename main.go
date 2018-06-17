@@ -26,11 +26,24 @@ func newK8s() (*k8s, error) {
 	return &client, nil
 }
 
+func (o *k8s) getVersion() (string, error) {
+	version, err := o.clientset.Discovery().ServerVersion()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s", version), nil
+}
+
 func main() {
 	k8s, err := newK8s()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(k8s)
+	v, err := k8s.getVersion()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(v)
 }
